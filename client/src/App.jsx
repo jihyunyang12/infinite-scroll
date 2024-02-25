@@ -4,6 +4,7 @@ import "./styles.css";
 
 function App() {
   const [photos, setPhotos] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
   const nextUrl = useRef();
 
   const imgRef = useCallback((input) => {
@@ -18,6 +19,7 @@ function App() {
   }, []);
 
   async function fetchPhotos(url, overwrite = false) {
+    setIsLoading(true);
     const res = await fetch(url);
     nextUrl.current = parseLinkHeader(res.headers.get("Link")).next;
     const data = await res.json();
@@ -29,6 +31,7 @@ function App() {
         return [...prevPhotos, ...data];
       });
     }
+    setIsLoading(false);
   }
 
   useEffect(() => {
@@ -36,17 +39,21 @@ function App() {
   }, []);
 
   return (
-    <>
-      <div className="grid">
-        {photos.map((photo, idx) => (
-          <img
-            key={photo.id}
-            src={photo.url}
-            ref={idx === photos.length - 1 ? imgRef : undefined}
-          />
+    <div className="grid">
+      {photos.map((photo, idx) => (
+        <img
+          key={photo.id}
+          src={photo.url}
+          ref={idx === photos.length - 1 ? imgRef : undefined}
+        />
+      ))}
+      {isLoading &&
+        Array.from(Array(20)).map((_, idx) => (
+          <div key={idx} className="skeleton">
+            Loading...
+          </div>
         ))}
-      </div>
-    </>
+    </div>
   );
 }
 
